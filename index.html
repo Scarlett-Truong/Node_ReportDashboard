@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+<body>
+    <div id="container"></div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.js"></script>
+    <script>
+        $(document).ready(function() {
+            $.ajax({
+            url: 'http://localhost:3400/',
+            type: 'GET',
+            dataType: 'json',
+            success: function(response){
+                if(response.length) {
+                response.forEach(function(val) {
+                    $('#container').append('<li>'+val+'</li>');
+                });
+                } else {
+                $('#container').html('No result found');
+                }
+            },
+            error: function(err) {
+                console.error(err);
+            }
+            });
+        });
+    </script>
+</body>
+</html>
