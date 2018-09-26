@@ -1,16 +1,15 @@
 const express = require('express')
-const app = express()
-const jsonData = require('./myfile.json');
-const Json2csvParser = require('json2csv').Parser;
-const fs = require('fs');
+// const app = express()
+// const jsonData = require('./myfile.json');
+// const Json2csvParser = require('json2csv').Parser;
+// const fs = require('fs');
 const {google} = require('googleapis');
-const drive = google.drive("v3");
-const key = require("./private_key.json");
-const path = require("path");
+// const drive = google.drive("v3");
+// const key = require("./private_key.json");
+// const path = require("path");
 const axios = require('axios');
 
 //------------------GTMETRIX API-------------------------------
-/*
 const gtmetrix = require ('gtmetrix') ({
   email: 'truongt8@student.douglascollege.ca',
   apikey: 'eb5db35e7e792206a5c192b4dc1af037'
@@ -29,22 +28,40 @@ let gtm = {
   requests: 0
 };
 
-// Poll test every 5 seconds for completion, then log the result
-gtmetrix.test.create (testDetails).then (data =>
-  gtmetrix.test.get(data.test_id, 5000).then(response => {
-    gtm.loadTime = response.results.fully_loaded_time/1000;
-    gtm.pageSize = response.results.page_bytes/1000;
-    gtm.requests = response.results.page_elements;
-    console.log(gtm.loadTime);
-    console.log(response);
-    return gtm;
-  }));
+// promise
 
-console.log(gtm);  
-*/
+// Poll test every 5 seconds for completion, then log the result
+
+const gtmResult = new Promise((resolve, reject) => {
+  try{
+    gtmetrix.test.create (testDetails).then (data =>
+      gtmetrix.test.get(data.test_id, 5000).then(response => {
+        gtm.loadTime = response.results.fully_loaded_time/1000;
+        gtm.pageSize = response.results.page_bytes/1000;
+        gtm.requests = response.results.page_elements;
+        console.log(gtm.loadTime);
+        console.log(response);
+        resolve(gtm);
+      }));
+  } catch (e) {
+    reject(e);
+  }
+});
+
+gtmResult.then( (gtmValues) => {
+  console.log('print new gtm values');
+  console.log(gtmValues);
+}).catch((e) => {
+  console.log(e);
+});
+
+gtmResult.then((newGtm) => {
+  console.log('print new gtm values');
+  console.log(newGtm);
+})
 
 //------------------WEBPAGETEST API-------------------------------
-axios.get()
+// axios.get()
 
 
 /*
@@ -156,4 +173,4 @@ app.get('/', (req, res) => {
 */
 
 
-app.listen(3700, () => console.log('Example app listening on port 3500!'));
+// app.listen(3700, () => console.log('Example app listening on port 3500!'));
