@@ -1,4 +1,2 @@
-"Date","Speed Index","Time To Interact","Fully Loaded Time","Total Page Size","Requests","Pages Image Score","URL","Total Images Analyzed","Total Images Weight","Start Render","Speed Index","Time","kBytes","Document Completed"
-"2018-09-21T17:43:37.243Z","","5.7 s","","","","","","","","","","","",""
-,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,
+"Date","Lighthouse Speed Index","Time To Interact","GT Fully Loaded Time","Total Page Size","Requests","Pages Image Score","URL","Total Images Analyzed","Total Images Weight","Start Render","Speed Index","Doc Completed Time","Doc Completed kBytes","Fully Loaded Time","Fully Loaded kBytes"
+"2018-09-26T23:16:54.328Z","3.2 s","5.7 s",2.817,1823.636,66,"","","","",1.5,1727,2.077,794.406,4.453,1681.256
