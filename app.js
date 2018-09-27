@@ -134,30 +134,28 @@ const fields = ["Date",
         
 gtmResult.then(gtmData => {
   wptResult.then(wptData => {
-    const myReport = [
-      {
-        "Date": new Date(),
-        "Lighthouse Speed Index": jsonData.audits["speed-index"].displayValue,
-        "Time To Interact": jsonData.audits.interactive.displayValue,
-        "GT Fully Loaded Time": gtmData.loadTime,
-        "Total Page Size": gtmData.pageSize,
-        "Requests": gtmData.requests,
-        "Pages Image Score": "",
-        "URL": "",
-        "Total Images Analyzed": "",
-        "Total Images Weight": "",
-        "Start Render": wptData.startRender,
-        "Speed Index": wptData.speedIndex,
-        "Doc Completed Time": wptData.docTime,
-        "Doc Completed kBytes": wptData.docKBytes,
-        "Fully Loaded Time": wptData.fullTime,
-        "Fully Loaded kBytes": wptData.fullKBytes,
-      }
-    ];
-    
+    const reportObj = {
+      "Date": new Date(),
+      "Lighthouse Speed Index": jsonData.audits["speed-index"].displayValue,
+      "Time To Interact": jsonData.audits.interactive.displayValue,
+      "GT Fully Loaded Time": gtmData.loadTime,
+      "Total Page Size": gtmData.pageSize,
+      "Requests": gtmData.requests,
+      "Pages Image Score": "",
+      "URL": "",
+      "Total Images Analyzed": "",
+      "Total Images Weight": "",
+      "Start Render": wptData.startRender,
+      "Speed Index": wptData.speedIndex,
+      "Doc Completed Time": wptData.docTime,
+      "Doc Completed kBytes": wptData.docKBytes,
+      "Fully Loaded Time": wptData.fullTime,
+      "Fully Loaded kBytes": wptData.fullKBytes,
+    }
+    let myReport = [];
+    myReport.push(reportObj);
     const json2csvParser = new Json2csvParser({ fields });
     const csv = json2csvParser.parse(myReport);
-    //console.log(csv);
     fs.writeFile('name.csv', csv, function (err) {
         if (err) {
             return console.log(err);
