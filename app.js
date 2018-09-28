@@ -6,7 +6,10 @@ const drive = google.drive("v3");
 const key = require("./private_key.json");
 const path = require("path");
 const WebPageTest = require('WebPageTest');
-//const myUrl = 'www.cavellexcel.com';
+const urlTest = 'https://www.westcoastloghomes.com';
+const folderId = "1fhCoQgUnBXKmPLZ0TFzyE0Oaor4Vc3y6";
+const fileData = "westcoast-seo-report-data";
+const fileGraph = "westcoast-seo-report-graph-data";
 
 //------------------GTMETRIX API-------------------------------
 // Poll test every 5 seconds for completion, then log the result
@@ -16,7 +19,7 @@ const gtmetrix = require ('gtmetrix') ({
 });
 // Run test from London with Google Chrome
 const testDetails = {
-  url: 'http://www.cavellexcel.com/',
+  url: urlTest,
   location: 1,
   browser: 3
 };
@@ -46,15 +49,6 @@ const gtmApi = new Promise((resolve, reject) => {
   }
 });
 
-/*
-gtmResult.then( (gtmValues) => {
-  console.log('print new gtm values');
-  console.log(gtmValues);
-}).catch((e) => {
-  console.log(e);
-});
-*/
-
 //------------------WEBPAGETEST API-------------------------------
 let wpt = {
   startRender: 0,
@@ -67,7 +61,7 @@ let wpt = {
 
 const wptAuth = new WebPageTest('http://www.webpagetest.org/','A.dd2cd591e2905b1433d7ab0290cadbf8')
 const wptApi = new Promise((resolve, reject) => {
-  wptAuth.runTest('http://www.cavellexcel.com', {
+  wptAuth.runTest(urlTest, {
     connectivity: 'Cable',
     location: 'Dulles:Chrome',
     firstViewOnly: false,
@@ -102,47 +96,72 @@ jwToken.authorize((authErr) => {
   }
 });
 
+
 //Create CSV object and save as CSV file
 const fields = ["Date",
-                "Lighthouse Speed Index",
+                "Speed Index (s)",
                 "Time To Interact",
-                "GT Fully Loaded Time",
+                "Performance",
+                "PWA",
+                "Accessibility",
+                "Best Practices",
+                "SEO",
+                "Page Speed Score",
+                "YSlow Score",
+                "Fully Loaded Time",
                 "Total Page Size",
                 "Requests",
-                "Pages Image Score",
-                "URL",
-                "Total Images Analyzed",
-                "Total Images Weight",
                 "Start Render",
                 "Speed Index",
                 "Doc Completed Time",
                 "Doc Completed kBytes",
                 "Fully Loaded Time",
-                "Fully Loaded kBytes" ];
+                "Fully Loaded kBytes",
+                "Pages Image Score",
+                "URL",
+                "Total Images Analyzed",
+                "Total Images Weight" 
+              ];
+
+//Get current date               
+const yyyymmdd = () => {
+  var now = new Date();
+  var y = now.getFullYear();
+  var m = now.getMonth() + 1;
+  var d = now.getDate();
+  return '' + y + (m < 10 ? '0' : '') + m + (d < 10 ? '0' : '') + d;
+}
 
 const callApi = async () => {
   const gtmData = await gtmApi;
   const wptData = await wptApi;
-  
+
   const myReport = [{
-    "Date": new Date().toISOString(),
-    "Lighthouse Speed Index": jsonData.audits["speed-index"].displayValue,
-    "Time To Interact": jsonData.audits.interactive.displayValue,
-    "GT Fully Loaded Time": gtmData.loadTime,
+    "Date": yyyymmdd(),
+    "Speed Index (s)": (jsonData.audits["speed-index"].rawValue/1000).toFixed(2),
+    "Time To Interact": (jsonData.audits.interactive.rawValue/1000).toFixed(2),
+    "Performance": jsonData.categories.performance.score,
+    "PWA": jsonData.categories.pwa.score,
+    "Accessibility": jsonData.categories.accessibility.score,
+    "Best Practices": jsonData.categories["best-practices"].score,
+    "SEO": jsonData.categories.seo.score,
+    "Page Speed Score": gtmData.speedScore,
+    "YSlow Score": gtmData.ySlow,
+    "Fully Loaded Time": gtmData.loadTime,
     "Total Page Size": gtmData.pageSize,
     "Requests": gtmData.requests,
-    "Pages Image Score": "",
-    "URL": "",
-    "Total Images Analyzed": "",
-    "Total Images Weight": "",
     "Start Render": wptData.startRender,
     "Speed Index": wptData.speedIndex,
     "Doc Completed Time": wptData.docTime,
     "Doc Completed kBytes": wptData.docKBytes,
     "Fully Loaded Time": wptData.fullTime,
     "Fully Loaded kBytes": wptData.fullKBytes,
+    "Pages Image Score": "",
+    "URL": "",
+    "Total Images Analyzed": "",
+    "Total Images Weight": "",
   },{
-    "Date": new Date().toISOString(),
+    "Date": yyyymmdd(),
     "Title": "Percent",
     "Performance": jsonData.categories.performance.score,
     "PWA": jsonData.categories.pwa.score,
@@ -152,7 +171,7 @@ const callApi = async () => {
     "Page Speed Score": gtmData.speedScore,
     "YSLow Score" : gtmData.ySlow
   },{
-    "Date": new Date().toISOString(),
+    "Date": yyyymmdd(),
     "Title": "Remain",
     "Performance": 1 - jsonData.categories.performance.score,
     "PWA": (1 - jsonData.categories.pwa.score),
@@ -168,10 +187,21 @@ const callApi = async () => {
 callApi().then(myReport => {
   const json2csvParser = new Json2csvParser({ fields });
   const csv = json2csvParser.parse(myReport[0]);
-  const strReport = `\n${myReport[0]["Date"]},${myReport[0]["Lighthouse Speed Index"]},${myReport[0]["Time To Interact"]},${myReport[0]["GT Fully Loaded Time"]},${myReport[0]["Total Page Size"]},${myReport[0]["Requests"]},${myReport[0]["Pages Image Score"]},${myReport[0]["URL"]},${myReport[0]["Total Images Analyzed"]},${myReport[0]["Total Images Weight"]},${myReport[0]["Start Render"]},${myReport[0]["Speed Index"]},${myReport[0]["Doc Completed Time"]},${myReport[0]["Doc Completed kBytes"]},${myReport[0]["Fully Loaded Time"]},${myReport[0]["Fully Loaded kBytes"]}`;
+  const strReport = `\n${myReport[0]["Date"]},${myReport[0]["Speed Index (s)"]},
+                      ${myReport[0]["Time To Interact"]},${myReport[0]["Performance"]},
+                      ${myReport[0]["PWA"]},${myReport[0]["Accessibility"]},
+                      ${myReport[0]["Best Practices"]},${myReport[0]["SEO"]},
+                      ${myReport[0]["Page Speed Score"]},${myReport[0]["YSlow Score"]},
+                      ${myReport[0]["Fully Loaded Time"]},
+                      ${myReport[0]["Total Page Size"]},${myReport[0]["Requests"]},
+                      ${myReport[0]["Start Render"]},${myReport[0]["Speed Index"]},
+                      ${myReport[0]["Doc Completed Time"]},${myReport[0]["Doc Completed kBytes"]},
+                      ${myReport[0]["Fully Loaded Time"]},${myReport[0]["Fully Loaded kBytes"]},
+                      ${myReport[0]["Pages Image Score"]},${myReport[0]["URL"]},
+                      ${myReport[0]["Total Images Analyzed"]},${myReport[0]["Total Images Weight"]}`;
   //Write file with normal data
-  if(fs.existsSync('name.csv')){
-    fs.appendFile('name.csv', strReport, function (err) {
+  if(fs.existsSync(`${fileData}.csv`)){
+    fs.appendFile(`${fileData}.csv`, strReport, function (err) {
       if (err) {
           return console.log(err);
       }
@@ -179,7 +209,7 @@ callApi().then(myReport => {
     });
   }
   else {
-    fs.writeFile('name.csv', csv, function (err) {
+    fs.writeFile(`${fileData}.csv`, csv, function (err) {
       if (err) {
           return console.log(err);
       }
@@ -191,8 +221,8 @@ callApi().then(myReport => {
   const header = "Date,Title,Performance,PWA,Accessibility,Best Practices,SEO,Page Speed Score,YSLow Score";
   const content = `\n${myReport[1].Date},${myReport[1].Title},${myReport[1].Performance},${myReport[1].PWA},${myReport[1].Accessibility},${myReport[1]["Best Pracices"]},${myReport[1].SEO},${myReport[1]["Page Speed Score"]},${myReport[1]["YSLow Score"]}`;
   const contentRemain = `\n${myReport[2].Date},${myReport[2].Title},${myReport[2].Performance},${myReport[2].PWA},${myReport[2].Accessibility},${myReport[2]["Best Pracices"]},${myReport[2].SEO},${myReport[2]["Page Speed Score"]},${myReport[2]["YSLow Score"]}`;
-  if(fs.existsSync('name2.csv')){
-    fs.appendFile('name2.csv', content.concat(contentRemain), function (err) {
+  if(fs.existsSync(`${fileGraph}.csv`)){
+    fs.appendFile(`${fileGraph}.csv`, content.concat(contentRemain), function (err) {
       if (err) {
           return console.log(err);
       }
@@ -200,7 +230,7 @@ callApi().then(myReport => {
     });
   }
   else {
-    fs.writeFile('name2.csv', header.concat(content).concat(contentRemain), function (err) {
+    fs.writeFile(`${fileGraph}.csv`, header.concat(content).concat(contentRemain), function (err) {
       if (err) {
           return console.log(err);
       }
@@ -209,16 +239,16 @@ callApi().then(myReport => {
   };
 
 }).then(uploadToDrive => {
-  const folderId = "1-pkCn-ryOCPL8RAsi2j8SwPa9RYNNx6Q";
+  
   //Uplaod file 1 with normal data
   const fileMetadata = {
-      'name': 'odws-seo-report-data',
+      'name': fileData,
       'mimeType': 'application/vnd.google-apps.spreadsheet',
       parents: [folderId]
   };
   const media = {
     mimeType: 'text/csv',
-    body: fs.createReadStream(path.join(__dirname, './name.csv'))
+    body: fs.createReadStream(path.join(__dirname, `./${fileData}.csv`))
   };
 
   drive.files.create({
@@ -236,13 +266,13 @@ callApi().then(myReport => {
 
   //Upload file 2 with percent data
   const fileMetadata2 = {
-    'name': 'odws-seo-report-graph-data',
+    'name': fileGraph,
     'mimeType': 'application/vnd.google-apps.spreadsheet',
     parents: [folderId]
   };
   const media2 = {
     mimeType: 'text/csv',
-    body: fs.createReadStream(path.join(__dirname, './name2.csv'))
+    body: fs.createReadStream(path.join(__dirname, `./${fileGraph}.csv`))
   };
 
   drive.files.create({
@@ -259,114 +289,3 @@ callApi().then(myReport => {
     } });
 
 });
-/*
-callApi().then( result => {
-  myReport.push(result);
-  return myReport;
-}).then(myReport => {
-  return JSON.stringify(myReport)
-}).then(myReport => console.log(myReport));
-*/
-
-/*
-const json2csvParser = new Json2csvParser({ fields });
-const csv = json2csvParser.parse(myReport);
-
-
-//Write file
-fs.appendFile('name.csv', csv, function (err) {
-    if (err) {
-        return console.log(err);
-    }
-    console.log('File append!\n');
-});
-*/
-/*
-
-//Put file in Google Drive
-const folderId = "1-pkCn-ryOCPL8RAsi2j8SwPa9RYNNx6Q";
-const fileMetadata = {
-    'name': 'My Report 2',
-    'mimeType': 'application/vnd.google-apps.spreadsheet',
-    parents: [folderId]
-};
-const media = {
-  mimeType: 'text/csv',
-  body: fs.createReadStream(path.join(__dirname, './name.csv'))
-};
-
-drive.files.create({
-  auth: jwToken,
-  resource: fileMetadata,
-  media: media,
-  fields: 'id'
-}, function(err, file) {
-  if (err) {
-    // Handle error
-    console.error(err);
-  } else {
-    console.log('File Id: ', file.id);
-  } });
-
-*/
- 
-/*
-gtmResult.then(gtmData => {
-  wptResult.then(wptData => {
-    const reportObj = {
-      "Date": new Date(),
-      "Lighthouse Speed Index": jsonData.audits["speed-index"].displayValue,
-      "Time To Interact": jsonData.audits.interactive.displayValue,
-      "GT Fully Loaded Time": gtmData.loadTime,
-      "Total Page Size": gtmData.pageSize,
-      "Requests": gtmData.requests,
-      "Pages Image Score": "",
-      "URL": "",
-      "Total Images Analyzed": "",
-      "Total Images Weight": "",
-      "Start Render": wptData.startRender,
-      "Speed Index": wptData.speedIndex,
-      "Doc Completed Time": wptData.docTime,
-      "Doc Completed kBytes": wptData.docKBytes,
-      "Fully Loaded Time": wptData.fullTime,
-      "Fully Loaded kBytes": wptData.fullKBytes,
-    }
-    let myReport = [];
-    myReport.push(reportObj);
-    const json2csvParser = new Json2csvParser({ fields });
-    const csv = json2csvParser.parse(myReport);
-    fs.writeFile('name.csv', csv, function (err) {
-        if (err) {
-            return console.log(err);
-        }
-        console.log('FILE SUCCESSFULLY WRITTEN!\n');
-    });
-    
-    
-    const folderId = "1-pkCn-ryOCPL8RAsi2j8SwPa9RYNNx6Q";
-    const fileMetadata = {
-        'name': 'My Report 2',
-        'mimeType': 'application/vnd.google-apps.spreadsheet',
-        parents: [folderId]
-    };
-    const media = {
-      mimeType: 'text/csv',
-      body: fs.createReadStream(path.join(__dirname, './name.csv'))
-    };
-    
-    drive.files.create({
-      auth: jwToken,
-      resource: fileMetadata,
-      media: media,
-      fields: 'id'
-    }, function(err, file) {
-      if (err) {
-        // Handle error
-        console.error(err);
-      } else {
-        console.log('File Id: ', file.id);
-      } 
-    });
-  });
-})
-*/
