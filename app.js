@@ -1,5 +1,3 @@
-const express = require('express')
-//const app = express()
 const jsonData = require('./myfile.json');
 const Json2csvParser = require('json2csv').Parser;
 const fs = require('fs');
@@ -7,19 +5,15 @@ const {google} = require('googleapis');
 const drive = google.drive("v3");
 const key = require("./private_key.json");
 const path = require("path");
-//const axios = require('axios');
 const WebPageTest = require('WebPageTest');
 //const myUrl = 'www.cavellexcel.com';
 
 //------------------GTMETRIX API-------------------------------
-// promise
 // Poll test every 5 seconds for completion, then log the result
-
 const gtmetrix = require ('gtmetrix') ({
   email: 'truongt8@student.douglascollege.ca',
   apikey: 'eb5db35e7e792206a5c192b4dc1af037'
 });
- 
 // Run test from London with Google Chrome
 const testDetails = {
   url: 'http://www.cavellexcel.com/',
@@ -33,7 +27,7 @@ let gtm = {
   requests: 0
 };
 
-const gtmResult = new Promise((resolve, reject) => {
+const gtmApi = new Promise((resolve, reject) => {
   try{
     gtmetrix.test.create (testDetails).then (data =>
       gtmetrix.test.get(data.test_id, 5000).then(response => {
@@ -57,15 +51,7 @@ gtmResult.then( (gtmValues) => {
 });
 */
 
-/*
-gtmResult.then((newGtm) => {
-  console.log('print new gtm values');
-  console.log(newGtm);
-})
-*/
-
 //------------------WEBPAGETEST API-------------------------------
-
 let wpt = {
   startRender: 0,
   speedIndex: 0,
@@ -75,9 +61,9 @@ let wpt = {
   fullKBytes: 0
 };
 
-const wptApi = new WebPageTest('http://www.webpagetest.org/','A.dd2cd591e2905b1433d7ab0290cadbf8')
-const wptResult = new Promise((resolve, reject) => {
-  wptApi.runTest('http://www.cavellexcel.com', {
+const wptAuth = new WebPageTest('http://www.webpagetest.org/','A.dd2cd591e2905b1433d7ab0290cadbf8')
+const wptApi = new Promise((resolve, reject) => {
+  wptAuth.runTest('http://www.cavellexcel.com', {
     connectivity: 'Cable',
     location: 'Dulles:Chrome',
     firstViewOnly: false,
@@ -94,8 +80,6 @@ const wptResult = new Promise((resolve, reject) => {
     resolve(wpt);
   })
 });
-//wptResult.then(data => {console.log(data)})
-
 
 //------------------OAUTH2 AUTHENTICATION-------------------------------
 const jwToken = new google.auth.JWT(
@@ -131,7 +115,129 @@ const fields = ["Date",
                 "Doc Completed kBytes",
                 "Fully Loaded Time",
                 "Fully Loaded kBytes" ];
-        
+
+const callApi = async () => {
+  const gtmData = await gtmApi;
+  const wptData = await wptApi;
+  
+  const myReport = {
+    "Date": new Date().toISOString(),
+    "Lighthouse Speed Index": jsonData.audits["speed-index"].displayValue,
+    "Time To Interact": jsonData.audits.interactive.displayValue,
+    "GT Fully Loaded Time": gtmData.loadTime,
+    "Total Page Size": gtmData.pageSize,
+    "Requests": gtmData.requests,
+    "Pages Image Score": "",
+    "URL": "",
+    "Total Images Analyzed": "",
+    "Total Images Weight": "",
+    "Start Render": wptData.startRender,
+    "Speed Index": wptData.speedIndex,
+    "Doc Completed Time": wptData.docTime,
+    "Doc Completed kBytes": wptData.docKBytes,
+    "Fully Loaded Time": wptData.fullTime,
+    "Fully Loaded kBytes": wptData.fullKBytes,
+  }
+  return myReport;    
+}
+
+callApi().then(myReport => {
+  const json2csvParser = new Json2csvParser({ fields });
+  const csv = json2csvParser.parse(myReport);
+  const strReport = `\n${myReport["Date"]},${myReport["Lighthouse Speed Index"]},${myReport["Time To Interact"]},${myReport["GT Fully Loaded Time"]},${myReport["Total Page Size"]},${myReport["Requests"]},${myReport["Pages Image Score"]},${myReport["URL"]},${myReport["Total Images Analyzed"]},${myReport["Total Images Weight"]},${myReport["Start Render"]},${myReport["Speed Index"]},${myReport["Doc Completed Time"]},${myReport["Doc Completed kBytes"]},${myReport["Fully Loaded Time"]},${myReport["Fully Loaded kBytes"]}`;
+  if(fs.existsSync('name.csv')){
+    fs.appendFile('name.csv', strReport, function (err) {
+      if (err) {
+          return console.log(err);
+      }
+      console.log('File append!\n');
+    });
+  }
+  else {
+    fs.writeFile('name.csv', csv, function (err) {
+      if (err) {
+          return console.log(err);
+      }
+      console.log('File successfully written!\n');
+    });
+  }; 
+}).then(uploadToDrive => {
+  const folderId = "1-pkCn-ryOCPL8RAsi2j8SwPa9RYNNx6Q";
+  const fileMetadata = {
+      'name': 'My Report 2',
+      'mimeType': 'application/vnd.google-apps.spreadsheet',
+      parents: [folderId]
+  };
+  const media = {
+    mimeType: 'text/csv',
+    body: fs.createReadStream(path.join(__dirname, './name.csv'))
+  };
+
+  drive.files.create({
+    auth: jwToken,
+    resource: fileMetadata,
+    media: media,
+    fields: 'id'
+  }, function(err, file) {
+    if (err) {
+      // Handle error
+      console.error(err);
+    } else {
+      console.log('File Id: ', file.id);
+    } });
+});
+/*
+callApi().then( result => {
+  myReport.push(result);
+  return myReport;
+}).then(myReport => {
+  return JSON.stringify(myReport)
+}).then(myReport => console.log(myReport));
+*/
+
+/*
+const json2csvParser = new Json2csvParser({ fields });
+const csv = json2csvParser.parse(myReport);
+
+
+//Write file
+fs.appendFile('name.csv', csv, function (err) {
+    if (err) {
+        return console.log(err);
+    }
+    console.log('File append!\n');
+});
+*/
+/*
+
+//Put file in Google Drive
+const folderId = "1-pkCn-ryOCPL8RAsi2j8SwPa9RYNNx6Q";
+const fileMetadata = {
+    'name': 'My Report 2',
+    'mimeType': 'application/vnd.google-apps.spreadsheet',
+    parents: [folderId]
+};
+const media = {
+  mimeType: 'text/csv',
+  body: fs.createReadStream(path.join(__dirname, './name.csv'))
+};
+
+drive.files.create({
+  auth: jwToken,
+  resource: fileMetadata,
+  media: media,
+  fields: 'id'
+}, function(err, file) {
+  if (err) {
+    // Handle error
+    console.error(err);
+  } else {
+    console.log('File Id: ', file.id);
+  } });
+
+*/
+ 
+/*
 gtmResult.then(gtmData => {
   wptResult.then(wptData => {
     const reportObj = {
@@ -190,3 +296,4 @@ gtmResult.then(gtmData => {
     });
   });
 })
+*/
