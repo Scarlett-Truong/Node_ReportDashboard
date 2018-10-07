@@ -100,7 +100,7 @@ jwToken.authorize((authErr) => {
 //Create CSV object and save as CSV file
 const fields = ["Date",
                 "Speed Index (s)",
-                "Time To Interact",
+                "Time To Interact (s)",
                 "Performance",
                 "PWA",
                 "Accessibility",
@@ -108,14 +108,14 @@ const fields = ["Date",
                 "SEO",
                 "Page Speed Score",
                 "YSlow Score",
-                "Fully Loaded Time",
-                "Total Page Size",
+                "GT Fully Loaded Time (s)",
+                "Total Page Size (KB)",
                 "Requests",
-                "Start Render",
+                "Start Render (s)",
                 "Speed Index",
-                "Doc Completed Time",
+                "Doc Completed Time (s)",
                 "Doc Completed kBytes",
-                "Fully Loaded Time",
+                "Fully Loaded Time (s)",
                 "Fully Loaded kBytes",
                 "Pages Image Score",
                 "URL",
@@ -139,22 +139,22 @@ const callApi = async () => {
   const myReport = [{
     "Date": yyyymmdd(),
     "Speed Index (s)": (jsonData.audits["speed-index"].rawValue/1000).toFixed(2),
-    "Time To Interact": (jsonData.audits.interactive.rawValue/1000).toFixed(2),
+    "Time To Interact (s)": (jsonData.audits.interactive.rawValue/1000).toFixed(2),
     "Performance": jsonData.categories.performance.score,
     "PWA": jsonData.categories.pwa.score,
     "Accessibility": jsonData.categories.accessibility.score,
     "Best Practices": jsonData.categories["best-practices"].score,
     "SEO": jsonData.categories.seo.score,
-    "Page Speed Score": gtmData.speedScore,
-    "YSlow Score": gtmData.ySlow,
-    "Fully Loaded Time": gtmData.loadTime,
-    "Total Page Size": gtmData.pageSize,
+    "Page Speed Score": gtmData.speedScore/100,
+    "YSlow Score": gtmData.ySlow/100,
+    "GT Fully Loaded Time (s)": gtmData.loadTime,
+    "Total Page Size (KB)": gtmData.pageSize,
     "Requests": gtmData.requests,
-    "Start Render": wptData.startRender,
+    "Start Render (s)": wptData.startRender,
     "Speed Index": wptData.speedIndex,
-    "Doc Completed Time": wptData.docTime,
+    "Doc Completed Time (s)": wptData.docTime,
     "Doc Completed kBytes": wptData.docKBytes,
-    "Fully Loaded Time": wptData.fullTime,
+    "Fully Loaded Time (s)": wptData.fullTime,
     "Fully Loaded kBytes": wptData.fullKBytes,
     "Pages Image Score": "",
     "URL": "",
@@ -187,18 +187,18 @@ const callApi = async () => {
 callApi().then(myReport => {
   const json2csvParser = new Json2csvParser({ fields });
   const csv = json2csvParser.parse(myReport[0]);
-  const strReport = `\n${myReport[0]["Date"]},${myReport[0]["Speed Index (s)"]},
-                      ${myReport[0]["Time To Interact"]},${myReport[0]["Performance"]},
-                      ${myReport[0]["PWA"]},${myReport[0]["Accessibility"]},
-                      ${myReport[0]["Best Practices"]},${myReport[0]["SEO"]},
-                      ${myReport[0]["Page Speed Score"]},${myReport[0]["YSlow Score"]},
-                      ${myReport[0]["Fully Loaded Time"]},
-                      ${myReport[0]["Total Page Size"]},${myReport[0]["Requests"]},
-                      ${myReport[0]["Start Render"]},${myReport[0]["Speed Index"]},
-                      ${myReport[0]["Doc Completed Time"]},${myReport[0]["Doc Completed kBytes"]},
-                      ${myReport[0]["Fully Loaded Time"]},${myReport[0]["Fully Loaded kBytes"]},
-                      ${myReport[0]["Pages Image Score"]},${myReport[0]["URL"]},
-                      ${myReport[0]["Total Images Analyzed"]},${myReport[0]["Total Images Weight"]}`;
+  const strReport = `\n${myReport[0]["Date"]},${myReport[0]["Speed Index (s)"]},`
+                      +`${myReport[0]["Time To Interact"]},${myReport[0]["Performance"]},`
+                      +`${myReport[0]["PWA"]},${myReport[0]["Accessibility"]},`
+                      +`${myReport[0]["Best Practices"]},${myReport[0]["SEO"]},`
+                      +`${myReport[0]["Page Speed Score"]},${myReport[0]["YSlow Score"]},`
+                      +`${myReport[0]["GT Fully Loaded Time"]},`
+                      +`${myReport[0]["Total Page Size"]},${myReport[0]["Requests"]},`
+                      +`${myReport[0]["Start Render"]},${myReport[0]["Speed Index"]},`
+                      +`${myReport[0]["Doc Completed Time"]},${myReport[0]["Doc Completed kBytes"]},`
+                      +`${myReport[0]["Fully Loaded Time"]},${myReport[0]["Fully Loaded kBytes"]},`
+                      +`${myReport[0]["Pages Image Score"]},${myReport[0]["URL"]},`
+                      +`${myReport[0]["Total Images Analyzed"]},${myReport[0]["Total Images Weight"]}`;
   //Write file with normal data
   if(fs.existsSync(`${fileData}.csv`)){
     fs.appendFile(`${fileData}.csv`, strReport, function (err) {
