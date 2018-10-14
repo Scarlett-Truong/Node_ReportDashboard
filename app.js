@@ -6,10 +6,10 @@ const drive = google.drive("v3");
 const key = require("./private_key.json");
 const path = require("path");
 const WebPageTest = require('WebPageTest');
-const urlTest = 'https://www.westcoastloghomes.com';
-const folderId = "1fhCoQgUnBXKmPLZ0TFzyE0Oaor4Vc3y6";
-const fileData = "westcoast-seo-report-data";
-const fileGraph = "westcoast-seo-report-graph-data";
+const urlTest = 'https://www.novodentalcentre.com';
+const folderId = "1kX5FpuwI9ACfqEzGfryA2D5UljZX2PWb";
+const fileData = "novo-seo-report-data";
+const fileGraph = "novo-seo-report-graph-data";
 
 //------------------GTMETRIX API-------------------------------
 // Poll test every 5 seconds for completion, then log the result
@@ -148,7 +148,7 @@ const callApi = async () => {
     "Page Speed Score": gtmData.speedScore/100,
     "YSlow Score": gtmData.ySlow/100,
     "GT Fully Loaded Time (s)": gtmData.loadTime,
-    "Total Page Size (KB)": gtmData.pageSize,
+    "Total Page Size (Bytes)": gtmData.pageSize*100,
     "Requests": gtmData.requests,
     "Start Render (s)": wptData.startRender,
     "Speed Index": wptData.speedIndex,
