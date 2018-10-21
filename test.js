@@ -1,9 +1,11 @@
 const yyyymmdd = () => {
     var now = new Date();
-    var y = now.getFullYear();
-    var m = now.getMonth() + 1;
     var d = now.getDate();
-    return '' + y + (m < 10 ? '0' : '') + m + (d < 10 ? '0' : '') + d;
+    var months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+    var y = now.getFullYear();
+    var m = months[now.getMonth()];
+    // return '' + y + (m < 10 ? '0' : '') + m + (d < 10 ? '0' : '') + d;
+    return '' + m + ' ' + y ;
 }
 
 console.log(yyyymmdd());
